@@ -2,42 +2,47 @@ public Plugin myinfo = {
 	name = "Admins List",
 	author = "Mozze",
 	description = "",
-	version = "1.0",
+	version = "1.1",
 	url = "t.me/pMozze"
 }
 
+Menu g_hMenu;
+
 public void OnPluginStart() {
 	LoadTranslations("adminslist.phrases");
-	RegConsoleCmd("sm_admins", onCommandPerform);
+
+	g_hMenu = new Menu(adminsMenuHandler);
+	g_hMenu.SetTitle("%t", "Title");
+
+	RegConsoleCmd("sm_admins", adminsCommand);
 }
 
-public Action onCommandPerform(int Client, int Args) {
-	Menu hMenu = CreateMenu(menuHandler);
-	hMenu.SetTitle("%t", "Title");
-	hMenu.ExitButton = true;
+public void OnPluginEnd() {
+	delete g_hMenu;
+}
 
-	int Index = 1;
+public Action adminsCommand(int iClient, int iArgs) {
+	char szBuffer[MAX_NAME_LENGTH];
+	int iAdmins;
 
-	for (Index = 1; Index < MaxClients; Index++) {
-		if (IsClientInGame(Index) && GetUserFlagBits(Index)) {
-			char Name[MAX_NAME_LENGTH];
-			GetClientName(Index, Name, sizeof(Name));
+	g_hMenu.RemoveAllItems();
 
-			hMenu.AddItem(Name, Name);
-			Index++;
+	for (int iClientIndex = 1; iClientIndex <= MaxClients; iClientIndex++) {
+		if (IsClientInGame(iClientIndex) && GetUserFlagBits(iClientIndex)) {
+			GetClientName(iClientIndex, szBuffer, sizeof(szBuffer));
+			g_hMenu.AddItem("", szBuffer);
+			iAdmins++;
 		}
 	}
 	
-	if (Index == 1) {
-		char Buffer[128];
-		Format(Buffer, sizeof(Buffer), "%t", "Admins are missing");
-		hMenu.AddItem(Buffer, Buffer, ITEMDRAW_DISABLED);
+	if (iAdmins == 0) {
+		Format(szBuffer, sizeof(szBuffer), "%t", "Admins are missing");
+		g_hMenu.AddItem(szBuffer, szBuffer, ITEMDRAW_DISABLED);
 	}
 
-	hMenu.Display(Client, 15);
+	g_hMenu.Display(iClient, 15);
 }
 
-public int menuHandler(Menu hMenu, MenuAction iAction, int Client, int Item) {
-	if (iAction == MenuAction_End)
-		delete hMenu;
+public int adminsMenuHandler(Menu hMenu, MenuAction iAction, int iClient, int iItem) {
+	return 0;
 }
